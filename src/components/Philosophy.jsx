@@ -32,7 +32,7 @@ export default function Philosophy() {
             <div className="max-w-5xl mx-auto w-full">
                 <h2 className="text-xl md:text-2xl text-[var(--color-plasma)] font-mono uppercase tracking-widest mb-12 animate-pulse flex items-center gap-4">
                     <span className="w-3 h-3 bg-[var(--color-plasma)] inline-block animate-ping"></span>
-                    Terminal_Access.log
+                    BROADCAST_INTERRUPTION_001
                 </h2>
                 <p className="text-2xl md:text-5xl lg:text-7xl font-mono uppercase tracking-tighter leading-tight relative text-white/90">
                     {text}

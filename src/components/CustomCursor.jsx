@@ -22,7 +22,7 @@ export default function CustomCursor() {
         };
 
         const onMouseUp = () => {
-            gsap.to(cursor, { scale: 1, duration: 0.2 });
+            gsap.to(cursor, { scale: 1.5, duration: 0.2 });
         };
 
         window.addEventListener('mousemove', onMouseMove);

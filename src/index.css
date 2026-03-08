@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-void: #050505;
+  --color-void: #000000;
   --color-oxblood: #5a0505;
   --color-static: #888888;
   --color-plasma: #e60000;
@@ -33,7 +33,7 @@ body::after {
   height: 100vh;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.04;
+  opacity: 0.1;
   filter: url(#noiseFilter);
 }
 

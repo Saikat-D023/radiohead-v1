@@ -57,7 +57,7 @@ export default function Discography() {
 
                         {/* Title & Index */}
                         <h3 className="relative z-20 text-4xl md:text-7xl lg:text-9xl font-black uppercase tracking-tighter text-white/90 text-center px-4 drop-shadow-2xl">{album.title}</h3>
-                        <div className="absolute bottom-6 right-8 font-mono text-sm tracking-widest z-20 text-white/60 drop-shadow-md bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">LP_{String((i + 1)).padStart(2, '0')}</div>
+                        <div className="absolute bottom-6 right-8 font-mono text-sm tracking-widest z-20 text-white/60 drop-shadow-md bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">A_{String((i + 1)).padStart(2, '0')}</div>
                     </a>
                 ))}
             </div>

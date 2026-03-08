@@ -40,7 +40,7 @@ export default function LoadingScreen({ onComplete }) {
             className="fixed inset-0 z-[9999] bg-[var(--color-void)] flex flex-col items-center justify-center text-[var(--color-ghost)]"
         >
             <div className="font-mono text-xs uppercase tracking-widest opacity-50 mb-4 animate-pulse">
-                System Initializing
+                Ice age coming, ice age coming...
             </div>
             <div
                 ref={textRef}

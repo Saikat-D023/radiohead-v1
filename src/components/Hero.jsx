@@ -43,7 +43,8 @@ export default function Hero() {
 
                 <div ref={subtitleRef} className="font-mono text-sm md:text-base uppercase max-w-2xl mx-auto flex flex-col gap-2 tracking-[0.2em] will-change-transform opacity-0">
                     <span>A definitive digital exploration</span>
-                    <span className="text-[var(--color-static)]">Sound. Vision. Paranoia.</span>
+                    {/* <span className="text-[var(--color-static)]">Sound. Vision. Paranoia.</span> */}
+                    <span className="hover:text-[var(--color-static)] animate-pulse text-[var(--color-plasma)] transition-colors">[STATUS: OPTIMIZED]</span>
                 </div>
             </div>
 
