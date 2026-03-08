@@ -40,7 +40,7 @@ export default function Navbar() {
         { name: 'Start', href: '#hero' },
         { name: 'Albums', href: '#albums' },
         { name: 'Members', href: '#members' },
-        { name: 'Propaganda', href: '#Propaganda' },
+        { name: 'Propaganda', href: '#philosophy' },
     ];
 
     return (
