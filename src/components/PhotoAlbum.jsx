@@ -21,8 +21,21 @@ export default function PhotoAlbum() {
     const cardsRef = useRef([]);
 
     useEffect(() => {
-        let ctx = gsap.context(() => {
-            // Pile to grid setup
+        let mm = gsap.matchMedia();
+
+        mm.add({
+            isDesktop: "(min-width: 768px)",
+            isMobile: "(max-width: 767px)"
+        }, (context) => {
+            let { isMobile } = context.conditions;
+
+            // Dynamics sizing based on screen breakpoints to fit 9-cards cleanly
+            const ringX = isMobile ? 110 : 400;
+            const ringY = isMobile ? 150 : 300;
+            const gridX = isMobile ? 110 : 350;
+            const gridY = isMobile ? 120 : 350;
+            const scaleSize = isMobile ? 0.75 : 1;
+
             const tl = gsap.timeline({
                 scrollTrigger: {
                     trigger: containerRef.current,
@@ -42,13 +55,15 @@ export default function PhotoAlbum() {
                 yPercent: -50,
                 rotation: i => (i - 4) * 8, // slight fan
                 z: i => i * -20,
+                scale: 1 // Start actual size and then animate scale for mobile later to prevent jitter
             });
 
             // Animate out to a rotating ring
             tl.to(cardsRef.current, {
-                x: i => Math.sin(i * Math.PI * 2 / 9) * (window.innerWidth < 768 ? 200 : 400),
-                y: i => Math.cos(i * Math.PI * 2 / 9) * (window.innerWidth < 768 ? 200 : 300),
+                x: i => Math.sin(i * Math.PI * 2 / 9) * ringX,
+                y: i => Math.cos(i * Math.PI * 2 / 9) * ringY,
                 rotation: i => -i * 40,
+                scale: scaleSize,
                 z: 0,
                 stagger: 0.05,
                 ease: 'power1.inOut',
@@ -58,17 +73,17 @@ export default function PhotoAlbum() {
                 .to({}, { duration: 0.5 })
                 // Animate out to a clean grid
                 .to(cardsRef.current, {
-                    x: i => (i % 3 - 1) * (window.innerWidth < 768 ? 120 : 350),
-                    y: i => (Math.floor(i / 3) - 1) * (window.innerWidth < 768 ? 120 : 350),
+                    x: i => (i % 3 - 1) * gridX,
+                    y: i => (Math.floor(i / 3) - 1) * gridY,
                     rotation: 0,
+                    scale: scaleSize,
                     stagger: 0.05,
                     ease: 'power3.inOut',
                     duration: 1.5
                 });
+        });
 
-        }, containerRef);
-
-        return () => ctx.revert();
+        return () => mm.revert();
     }, []);
 
     return (
