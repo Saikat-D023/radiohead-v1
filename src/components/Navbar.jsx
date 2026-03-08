@@ -45,7 +45,7 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ease-out ${scrolled ? 'bg-[var(--color-void)]/80 backdrop-blur-md py-4 border-b border-white/5' : 'bg-transparent py-6'}`}>
+            <nav className={`fixed top-0 w-full z-[60] transition-all duration-500 ease-out ${(scrolled && !isOpen) ? 'bg-[var(--color-void)]/80 backdrop-blur-md py-4 border-b border-white/5' : 'bg-transparent py-6'}`}>
                 <div className="container mx-auto px-6 md:px-12 flex justify-between items-center">
                     <div className="font-mono text-sm tracking-widest flex items-center gap-4 relative z-[60]">
                         <span className="w-2 h-2 rounded-full bg-[var(--color-plasma)] animate-pulse hidden md:block"></span>
