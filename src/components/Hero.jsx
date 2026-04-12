@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
+import ShapeCanvas from './ShapeCanvas';
 
 export default function Hero() {
     const containerRef = useRef(null);
@@ -28,6 +29,7 @@ export default function Hero() {
 
     return (
         <section id="hero" ref={containerRef} className="h-[100dvh] w-full flex flex-col justify-center items-center relative overflow-hidden">
+            <ShapeCanvas />
             {/* Background Graphic or subtle glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[40vw] md:h-[40vw] bg-[var(--color-plasma)] rounded-full blur-[120px] opacity-[0.15] mix-blend-screen pointer-events-none"></div>
 

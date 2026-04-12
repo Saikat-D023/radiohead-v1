@@ -9,6 +9,7 @@ import Members from './components/Members';
 import Discography from './components/Discography';
 import Philosophy from './components/Philosophy';
 import Footer from './components/Footer';
+import AudioPlayer from './components/AudioPlayer';
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,7 @@ function App() {
   return (
     <>
       <CustomCursor />
+      <AudioPlayer />
       {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
 
       <main

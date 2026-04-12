@@ -39,6 +39,7 @@ export default function Navbar() {
     const navLinks = [
         { name: 'Start', href: '#hero' },
         { name: 'Albums', href: '#albums' },
+        { name: 'Eras', href: '#eras' },
         { name: 'Members', href: '#members' },
         { name: 'Propaganda', href: '#philosophy' },
     ];

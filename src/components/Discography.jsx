@@ -39,7 +39,7 @@ export default function Discography() {
     }, []);
 
     return (
-        <section ref={containerRef} className="pb-[40vh] bg-[var(--color-void)] pt-32 px-4 md:px-20 z-30 relative">
+        <section id="eras" ref={containerRef} className="pb-[40vh] bg-[var(--color-void)] pt-32 px-4 md:px-20 z-30 relative">
             <h2 className="text-4xl md:text-6xl font-black uppercase mb-12 text-center tracking-widest text-white/20">The Stack</h2>
             <div className="max-w-4xl mx-auto relative h-full">
                 {albums.map((album, i) => (
