@@ -17,47 +17,26 @@ const albums = [
 ];
 
 export default function Discography() {
-    const containerRef = useRef(null);
-
-    useEffect(() => {
-        let ctx = gsap.context(() => {
-            const cards = gsap.utils.toArray('.stack-card');
-
-            cards.forEach((card, i) => {
-                ScrollTrigger.create({
-                    trigger: card,
-                    start: `top top+=${80 + i * 30}`,
-                    endTrigger: containerRef.current,
-                    end: 'bottom bottom',
-                    pin: true,
-                    pinSpacing: false,
-                    scrub: 1,
-                });
-            });
-        }, containerRef);
-        return () => ctx.revert();
-    }, []);
-
     return (
-        <section id="eras" ref={containerRef} className="pb-[40vh] bg-[var(--color-void)] pt-32 px-4 md:px-20 z-30 relative">
-            <h2 className="text-4xl md:text-6xl font-black uppercase mb-12 text-center tracking-widest text-white/20">The Stack</h2>
-            <div className="max-w-4xl mx-auto relative h-full">
-                {albums.map((album, i) => (
-                    <a key={i} href={album.url} target="_blank" rel="noopener noreferrer" className="stack-card w-full h-[50vh] md:h-[65vh] rounded-3xl overflow-hidden mb-8 shadow-2xl relative flex items-center justify-center bg-black border border-white/10 group block">
+        <section id="eras" className="h-screen w-screen flex-shrink-0 snap-center relative overflow-hidden bg-cover bg-center flex items-center justify-center" style={{ backgroundImage: 'url("/kid a.png")' }}>
+            <div className="absolute inset-0 bg-black/60 pointer-events-none"></div>
+            
+            <div className="absolute top-12 left-12 z-20 museum-placard max-w-sm">
+                <h2 className="title-serif text-2xl tracking-widest uppercase">The Discography Archive</h2>
+                <p className="font-sans text-sm italic mt-2">Chronological Soundscapes</p>
+            </div>
 
-                        {/* Background Image Image */}
+            <div className="relative z-10 w-full h-[60vh] flex overflow-x-auto snap-x snap-mandatory gap-12 px-[10vw] items-center pb-8" style={{ scrollbarWidth: 'none' }}>
+                {albums.map((album, i) => (
+                    <a key={i} href={album.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 snap-center museum-frame w-[60vw] md:w-[35vw] lg:w-[25vw] aspect-square relative group block transition-transform duration-500 hover:-translate-y-4">
                         <div
-                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out group-hover:scale-105 group-active:scale-105 group-focus:scale-105 opacity-60 group-hover:opacity-40 group-active:opacity-40 group-focus:opacity-40 grayscale group-hover:grayscale-0 group-active:grayscale-0 group-focus:grayscale-0"
+                            className="absolute inset-4 bg-cover bg-center bg-no-repeat filter grayscale-[50%] sepia-[20%] transition-all duration-700 group-hover:grayscale-0 group-hover:sepia-0"
                             style={{ backgroundImage: `url('${album.image}')` }}
                         />
-
-                        {/* Gradients & Textures */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 z-10"></div>
-                        <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSJ0cmFuc3BhcmVudCIvPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSIxIiBmaWxsPSIjRkZGIi8+Cjwvc3ZnPg==')] z-0 mix-blend-overlay"></div>
-
-                        {/* Title & Index */}
-                        <h3 className="relative z-20 text-4xl md:text-7xl lg:text-9xl font-black uppercase tracking-tighter text-white/90 text-center px-4 drop-shadow-2xl">{album.title}</h3>
-                        <div className="absolute bottom-6 right-8 font-mono text-sm tracking-widest z-20 text-white/60 drop-shadow-md bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">A_{String((i + 1)).padStart(2, '0')}</div>
+                        <div className="absolute -bottom-16 left-0 right-0 text-center bg-[#f8f5eb] border border-[#d4af37] px-4 py-3 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <h3 className="font-bold text-sm uppercase tracking-tighter title-serif text-[#1a1a1a]">{album.title}</h3>
+                            <div className="font-sans text-[10px] tracking-widest text-[#4a4a4a] uppercase mt-1">Exhibit A_{String((i + 1)).padStart(2, '0')}</div>
+                        </div>
                     </a>
                 ))}
             </div>

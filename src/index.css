@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-void: #000000;
+  --color-void: #0a0a0a;
   --color-oxblood: #5a0505;
   --color-static: #888888;
-  --color-plasma: #e60000;
-  --color-fog: #d4d4d8;
-  --color-ghost: #f4f4f5;
+  --color-plasma: #d4af37; /* Gold */
+  --color-fog: #f4ecd8; /* Warm beige */
+  --color-ghost: #2b2b2b; /* Dark charcoal */
 
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: 'Lora', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
 }
 
 :root {
-  background-color: var(--color-void);
+  background-color: var(--color-fog);
   color: var(--color-ghost);
 }
 
@@ -59,4 +60,176 @@ body::after {
 
 .group:hover .animate-marquee {
   animation-play-state: paused;
+}
+
+/* Museum utility classes */
+.museum-frame {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 0 10px #2a2a2a, inset 0 0 0 12px #d4af37;
+  background: var(--color-fog);
+  padding: 1rem;
+}
+
+.museum-placard {
+  background: #f8f5eb;
+  border: 1px solid #d4af37;
+  box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+  padding: 1.5rem;
+  color: #1a1a1a;
+  position: relative;
+}
+
+.museum-placard::before {
+  content: '';
+  position: absolute;
+  top: 4px; right: 4px; bottom: 4px; left: 4px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  pointer-events: none;
+}
+
+.title-serif {
+  font-family: var(--font-serif);
+}
+
+.bg-texture-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+/* Ocean descent */
+@keyframes ray-sway {
+  0%, 100% { transform: skewX(-12deg) translateX(0); opacity: 0.6; }
+  50% { transform: skewX(-6deg) translateX(30px); opacity: 1; }
+}
+
+.light-ray {
+  animation: ray-sway 9s ease-in-out infinite;
+}
+
+/* Below the light, covers stay dark until you shine the cursor on them */
+.deep-cover {
+  transition: filter 0.8s ease, box-shadow 0.8s ease;
+}
+
+@media (hover: hover) {
+  .deep-cover {
+    filter: brightness(0.3) saturate(0.4);
+  }
+
+  .group:hover .deep-cover {
+    filter: none;
+  }
+}
+
+/* Thom replaces the cursor on the ocean page */
+@media (pointer: fine) {
+  .thom-cursor,
+  .thom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* Watery tooltip: a wobbling glass bubble with drifting caustics */
+.water-tip {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(160, 225, 255, 0.2), rgba(60, 140, 200, 0.07));
+  border: 1px solid rgba(190, 240, 255, 0.35);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -14px 30px rgba(120, 200, 255, 0.08), 0 12px 40px rgba(0, 20, 40, 0.35);
+  border-radius: 28px 34px 30px 26px / 30px 26px 34px 28px;
+  animation: water-blob 8s ease-in-out infinite;
+}
+
+.water-tip::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 70% 60%, rgba(160, 230, 255, 0.12), transparent 28%),
+    radial-gradient(circle at 45% 80%, rgba(255, 255, 255, 0.06), transparent 25%);
+  animation: water-caustic 7s ease-in-out infinite alternate;
+}
+
+.water-tip > * {
+  position: relative;
+}
+
+/* Thought-bubble tail from the tooltip to the band member */
+.water-dot {
+  border-radius: 9999px;
+  background: rgba(160, 225, 255, 0.18);
+  border: 1px solid rgba(190, 240, 255, 0.4);
+  backdrop-filter: blur(6px);
+  animation: water-rise-bob 3s ease-in-out infinite;
+}
+
+.member-bob {
+  animation: member-bob 6s ease-in-out infinite;
+}
+
+@keyframes water-blob {
+  0%, 100% { border-radius: 28px 34px 30px 26px / 30px 26px 34px 28px; }
+  50% { border-radius: 34px 26px 28px 32px / 26px 32px 28px 34px; }
+}
+
+@keyframes water-caustic {
+  from { transform: translate(-6%, -4%) rotate(0deg); }
+  to { transform: translate(6%, 5%) rotate(10deg); }
+}
+
+@keyframes water-rise-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes member-bob {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-14px) rotate(1deg); }
+}
+
+/* Karma Fish: the tail swishes from its base; the lures flash red/blue like police lights */
+.kf-tail {
+  animation: kf-tail 1.2s ease-in-out infinite alternate;
+}
+
+.kf-light {
+  animation: kf-light 1.2s ease-in-out infinite;
+}
+
+.kf-light-alt {
+  animation-delay: -0.6s;
+}
+
+.kf-eye {
+  animation: kf-eye 3s ease-in-out infinite alternate;
+}
+
+@keyframes kf-tail {
+  from { transform: rotate(-7deg) scaleX(0.97); }
+  to { transform: rotate(7deg) scaleX(1.02); }
+}
+
+@keyframes kf-light {
+  0%, 100% { opacity: 0.25; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes kf-eye {
+  from { opacity: 0.4; }
+  to { opacity: 0.9; }
+}
+
+/* The Karma Fish's swimming: a slow bob with a nose-up, nose-down sway */
+@keyframes fish-swim {
+  0%, 100% { transform: translateY(0) rotate(-2deg) scaleY(1); }
+  25% { transform: translateY(-8px) rotate(0deg) scaleY(0.985); }
+  50% { transform: translateY(-14px) rotate(2deg) scaleY(1); }
+  75% { transform: translateY(-6px) rotate(0deg) scaleY(0.985); }
+}
+
+.fish-swim {
+  animation: fish-swim 4.5s ease-in-out infinite;
 }

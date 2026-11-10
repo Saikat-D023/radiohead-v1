@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const members = [
     { name: "Thom Yorke", role: "Vocals, Guitar, Keyboards, Programming", image: "/thom yorke.png" },
@@ -14,60 +15,47 @@ const members = [
 
 export default function Members() {
     const containerRef = useRef(null);
-    const scrollRef = useRef(null);
 
-    useEffect(() => {
-        let ctx = gsap.context(() => {
-            const panels = gsap.utils.toArray('.member-card');
-            gsap.to(panels, {
-                xPercent: -100 * (panels.length - 1),
-                ease: 'none',
-                scrollTrigger: {
-                    trigger: containerRef.current,
-                    pin: true,
-                    scrub: 1,
-                    end: () => "+=" + containerRef.current.offsetWidth
-                }
-            });
-        }, containerRef);
-
-        return () => ctx.revert();
-    }, []);
+    useGSAP(() => {
+        gsap.to(containerRef.current, {
+            yPercent: 30,
+            ease: "none",
+            scrollTrigger: {
+                trigger: containerRef.current,
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+    }, { scope: containerRef });
 
     return (
-        <section ref={containerRef} id="members" className="h-screen w-full bg-[var(--color-void)] overflow-hidden border-t border-white/5 relative z-20 flex flex-col justify-center">
+        <section id="members" ref={containerRef} className="h-screen w-full relative overflow-hidden bg-cover bg-center z-20" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1531685250784-7569952593d2?q=80&w=1920&auto=format&fit=crop")' }}>
+            <div className="absolute inset-0 bg-black/70 pointer-events-none"></div>
 
-            <div className="absolute top-[8%] md:top-[12%] w-full flex justify-center z-0 pointer-events-none">
-                <h2 className="text-[12vw] font-black uppercase text-transparent whitespace-nowrap leading-none tracking-tight" style={{ WebkitTextStroke: '2px var(--color-ghost)' }}>
-                    THE FIVE INSTRUMENTS
-                </h2>
+            <div className="absolute top-8 left-12 z-10 museum-placard max-w-sm">
+                <h2 className="title-serif text-2xl tracking-widest uppercase">The Portrait Gallery</h2>
+                <p className="font-sans text-sm italic mt-2">Core Members & Contributors</p>
             </div>
 
-            <div ref={scrollRef} className="h-full w-[500vw] flex items-center relative z-10">
-                {members.map((m, i) => (
-                    <div key={i} className="member-card w-screen h-full flex items-center justify-center relative p-4 md:p-8">
-                        <div className="w-full max-w-7xl xl:max-w-[85vw] border border-[var(--color-plasma)] bg-[var(--color-void)] p-8 md:p-16 flex flex-col justify-between" style={{ minHeight: '65vh' }}>
-                            <div className="flex flex-col md:flex-row justify-between items-center w-full gap-8">
-                                <div className="flex-1 text-left">
-                                    <h3 className="text-6xl md:text-7xl lg:text-[7rem] font-bold uppercase tracking-tighter mb-4 text-white leading-[0.85] whitespace-pre-line drop-shadow-md">
-                                        {m.name.replace(' ', '\n')}
-                                    </h3>
-                                    <p className="font-mono text-[10px] md:text-sm tracking-widest text-[#888888] uppercase mt-6">{m.role}</p>
-                                </div>
-
-                                <div className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 shrink-0">
-                                    <img src={m.image} alt={m.name} className="w-full h-full object-cover shadow-2xl" />
+            <div className="h-full w-full flex items-center justify-center relative z-10 pt-20 px-8">
+                <div className="flex flex-wrap justify-center gap-10 max-w-6xl">
+                    {members.map((m, i) => (
+                        <div key={i} className="flex flex-col items-center group">
+                            <div className="museum-frame transition-transform duration-500 group-hover:scale-105">
+                                <div className="w-32 h-32 md:w-48 md:h-48 overflow-hidden">
+                                    <img src={m.image} alt={m.name} className="w-full h-full object-cover filter grayscale sepia-[.3] transition-all duration-700 group-hover:grayscale-0 group-hover:sepia-0" />
                                 </div>
                             </div>
-
-                            <div className="mt-12 w-full h-16 md:h-24 flex items-end gap-[4px]">
-                                {Array.from({ length: 42 }).map((_, j) => (
-                                    <div key={j} className="flex-1 bg-[var(--color-plasma)]" style={{ height: `${20 + Math.random() * 80}%` }} />
-                                ))}
+                            <div className="mt-6 text-center bg-[#f8f5eb] border border-[#d4af37] px-4 py-2 shadow-lg max-w-[200px]">
+                                <h3 className="font-bold text-sm uppercase tracking-tighter title-serif text-[#1a1a1a]">
+                                    {m.name}
+                                </h3>
+                                <p className="font-sans text-[9px] tracking-widest text-[#4a4a4a] uppercase mt-1">{m.role}</p>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </section>
     );

@@ -1,8 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
 gsap.registerPlugin(ScrollTrigger);
+
+import { Link } from 'react-router-dom';
 
 const albums = [
     { id: 1, title: "Pablo Honey", year: "1993", image: "/pablo honey.png" },
@@ -20,7 +23,7 @@ export default function PhotoAlbum() {
     const containerRef = useRef(null);
     const cardsRef = useRef([]);
 
-    useEffect(() => {
+    useGSAP(() => {
         let mm = gsap.matchMedia();
 
         mm.add({
@@ -29,7 +32,6 @@ export default function PhotoAlbum() {
         }, (context) => {
             let { isMobile } = context.conditions;
 
-            // Dynamics sizing based on screen breakpoints to fit 9-cards cleanly
             const ringX = isMobile ? 110 : 400;
             const ringY = isMobile ? 150 : 300;
             const gridX = isMobile ? 110 : 350;
@@ -40,25 +42,23 @@ export default function PhotoAlbum() {
                 scrollTrigger: {
                     trigger: containerRef.current,
                     start: 'top top',
-                    end: '+=300%',
+                    end: '+=200%',
                     scrub: 1,
                     pin: true,
                 }
             });
 
-            // Initial state: pile
             gsap.set(cardsRef.current, {
                 position: 'absolute',
                 top: '50%',
                 left: '50%',
                 xPercent: -50,
                 yPercent: -50,
-                rotation: i => (i - 4) * 8, // slight fan
+                rotation: i => (i - 4) * 8,
                 z: i => i * -20,
-                scale: 1 // Start actual size and then animate scale for mobile later to prevent jitter
+                scale: 1
             });
 
-            // Animate out to a rotating ring
             tl.to(cardsRef.current, {
                 x: i => Math.sin(i * Math.PI * 2 / 9) * ringX,
                 y: i => Math.cos(i * Math.PI * 2 / 9) * ringY,
@@ -69,9 +69,7 @@ export default function PhotoAlbum() {
                 ease: 'power1.inOut',
                 duration: 1
             })
-                // small pause in the ring
                 .to({}, { duration: 0.5 })
-                // Animate out to a clean grid
                 .to(cardsRef.current, {
                     x: i => (i % 3 - 1) * gridX,
                     y: i => (Math.floor(i / 3) - 1) * gridY,
@@ -82,32 +80,47 @@ export default function PhotoAlbum() {
                     duration: 1.5
                 });
         });
-
-        return () => mm.revert();
-    }, []);
+        
+        // Add overlap parallax effect for this section when leaving
+        gsap.to(containerRef.current, {
+            yPercent: 30,
+            ease: "none",
+            scrollTrigger: {
+                trigger: containerRef.current,
+                start: "top top",
+                end: "bottom top",
+                scrub: true
+            }
+        });
+    }, { scope: containerRef });
 
     return (
-        <section id="albums" ref={containerRef} className="h-screen w-full relative overflow-hidden bg-[var(--color-void)] z-10">
-            <div className="absolute top-20 w-full text-center tracking-widest font-mono text-[var(--color-plasma)] text-xs uppercase opacity-70">
-                <h2>Initiate Protocol_Archive.01</h2>
+        <section id="albums" ref={containerRef} className="h-screen w-screen relative overflow-hidden bg-cover bg-center z-10" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1920&auto=format&fit=crop")' }}>
+            <div className="absolute inset-0 bg-black/60 pointer-events-none"></div>
+            
+            <div className="absolute top-12 w-full text-center z-10 museum-placard max-w-sm mx-auto left-0 right-0">
+                <h2 className="title-serif text-xl tracking-widest uppercase">The Album Collection</h2>
+                <p className="font-sans text-xs italic mt-2">Interactive Archive</p>
             </div>
+
             <div className="w-full h-full relative" style={{ perspective: '1200px' }}>
                 {albums.map((album, i) => (
-                    <div
+                    <Link
+                        to={`/album/${album.id}`}
                         key={album.id}
                         ref={el => cardsRef.current[i] = el}
-                        className={`w-36 h-36 md:w-72 md:h-72 flex flex-col justify-end p-4 md:p-6 shadow-2xl transition-transform duration-300 absolute cursor-pointer hover:z-50 border border-white/5 opacity-90 hover:opacity-100 hover:scale-110 bg-black overflow-hidden group`}
+                        className="museum-frame transition-transform duration-300 hover:z-50 hover:scale-110 group absolute block"
+                        style={{ width: '200px', height: '240px' }}
                     >
                         <div
-                            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 ease-out group-hover:scale-110 opacity-70 group-hover:opacity-100"
+                            className="w-full h-36 bg-cover bg-center bg-no-repeat opacity-90 group-hover:opacity-100"
                             style={{ backgroundImage: `url('${album.image}')` }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent z-10 pointer-events-none"></div>
-                        <div className="relative z-20 pointer-events-none">
-                            <h3 className="font-bold text-lg md:text-3xl uppercase tracking-tighter leading-none mb-1 text-white">{album.title}</h3>
-                            <p className="font-mono text-[10px] md:text-sm tracking-widest text-white/60">{album.year}</p>
+                        <div className="mt-3 text-center">
+                            <h3 className="font-bold text-xs uppercase tracking-tighter title-serif text-[#1a1a1a]">{album.title}</h3>
+                            <p className="font-sans text-[10px] italic text-[#4a4a4a]">{album.year}</p>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </section>

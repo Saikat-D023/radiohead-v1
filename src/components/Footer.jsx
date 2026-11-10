@@ -2,27 +2,25 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { PowerOff } from 'lucide-react';
+import { useGSAP } from '@gsap/react';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export default function Footer() {
     const footerRef = useRef(null);
 
-    useEffect(() => {
-        let ctx = gsap.context(() => {
-            gsap.fromTo('.shutdown-text',
-                { opacity: 0, scale: 0.95, y: 50 },
-                {
-                    opacity: 1, scale: 1, y: 0, duration: 1.5, ease: 'power3.out',
-                    scrollTrigger: {
-                        trigger: footerRef.current,
-                        start: 'top 80%',
-                    }
+    useGSAP(() => {
+        gsap.fromTo('.shutdown-text',
+            { opacity: 0, scale: 0.95, y: 50 },
+            {
+                opacity: 1, scale: 1, y: 0, duration: 1.5, ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: footerRef.current,
+                    start: 'top 80%',
                 }
-            );
-        }, footerRef);
-        return () => ctx.revert();
-    }, []);
+            }
+        );
+    }, { scope: footerRef });
 
     return (
         <footer ref={footerRef} className="h-screen w-full bg-[#030303] flex flex-col items-center justify-center relative overflow-hidden z-40">

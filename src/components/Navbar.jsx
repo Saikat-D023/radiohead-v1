@@ -37,23 +37,21 @@ export default function Navbar() {
     }, [isOpen]);
 
     const navLinks = [
-        { name: 'Start', href: '#hero' },
-        { name: 'Albums', href: '#albums' },
-        { name: 'Eras', href: '#eras' },
-        { name: 'Members', href: '#members' },
-        { name: 'Propaganda', href: '#philosophy' },
+        { name: 'Surface', href: '#surface' },
+        { name: 'Sunlight', href: '#sunlight' },
+        { name: 'Twilight', href: '#twilight' },
+        { name: 'Midnight', href: '#midnight' },
+        { name: 'Abyss', href: '#abyssal' },
+        { name: 'Hadal', href: '#hadal' },
     ];
 
     return (
         <>
-            <nav className={`fixed top-0 w-full z-[60] transition-all duration-500 ease-out ${(scrolled && !isOpen) ? 'bg-[var(--color-void)]/80 backdrop-blur-md py-4 border-b border-white/5' : 'bg-transparent py-6'}`}>
+            <nav className={`fixed top-0 w-full z-[60] transition-all duration-500 ease-out ${(scrolled || isOpen) ? 'text-white' : 'text-[#1c2a2e]'} ${(scrolled && !isOpen) ? 'bg-[var(--color-void)]/80 backdrop-blur-md py-4 border-b border-white/5' : 'bg-transparent py-6'}`}>
                 <div className="container mx-auto px-6 md:px-12 flex justify-between items-center">
                     <div className="font-mono text-sm tracking-widest flex items-center gap-4 relative z-[60]">
                         <span className="w-2 h-2 rounded-full bg-[var(--color-plasma)] animate-pulse hidden md:block"></span>
-                        <div className="flex flex-col">
-                            <span className="font-bold">RADIOHEAD</span>
-                            <span className="text-[10px] text-white/50">ARCHIVE_v1.0</span>
-                        </div>
+                        <span className="font-bold">RADIOHEAD</span>
                     </div>
 
                     <div className="hidden md:flex gap-8 font-mono text-xs tracking-widest uppercase relative z-[60]">
@@ -64,7 +62,7 @@ export default function Navbar() {
 
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="md:hidden text-white/80 hover:text-white transition-colors relative z-[60]"
+                        className="md:hidden opacity-80 hover:opacity-100 transition-opacity relative z-[60]"
                     >
                         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
