@@ -233,3 +233,16 @@ body::after {
 .fish-swim {
   animation: fish-swim 4.5s ease-in-out infinite;
 }
+
+/* Static rolling across the CRT terminal's screen as it wakes up */
+.crt-static {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, rgba(200, 235, 255, 0.55), rgba(40, 70, 90, 0.4) 75%);
+  mix-blend-mode: screen;
+  animation: crt-roll 0.25s steps(5) infinite;
+}
+
+@keyframes crt-roll {
+  to { background-position: 0 6px, 0 0; }
+}

@@ -3,13 +3,14 @@ import React, { useEffect, useRef, useState } from 'react';
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 // One picture per outfit level: nothing, then Jonny's scuba gear, Colin's goggles,
-// Ed's hood and Phil's regulator
+// Ed's hood, Phil's regulator and young Thom's headlamp
 const OUTFITS = [
     '/divers/thom.webp',
     '/divers/thom-scuba.webp',
     '/divers/thom-goggles.webp',
     '/divers/thom-cap.webp',
     '/divers/thom-regulator.webp',
+    '/divers/thom-light.webp',
 ];
 
 // Thom waits on the diving board until the page scrolls, then becomes the cursor.
@@ -79,6 +80,8 @@ export default function ThomDiver({ stateRef }) {
         const onResize = () => { if (!usingMouse) restingSpot(); };
 
         const frame = (now) => {
+            // Refs detach before the cleanup cancels this loop on the way to an album page
+            if (!bodyRef.current) return;
             const s = stateRef.current;
             const dy = window.scrollY - lastScroll;
             lastScroll = window.scrollY;

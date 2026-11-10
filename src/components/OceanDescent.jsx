@@ -1,61 +1,14 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import ThomDiver from './ThomDiver';
 import KarmaFish from './KarmaFish';
+import FoundObject from './FoundObject';
+import { MAX_DEPTH, ZONES, fmt, readDive, forgetDive } from '../data/descent';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
-
-const MAX_DEPTH = 10935; // Challenger Deep
-
-const ZONES = [
-    {
-        id: 'sunlight', name: 'Sunlight Zone', range: [0, 200], colors: ['#3a8fa3', '#1d6680'], glow: null,
-        era: 'Era 01 · 1993 – 1995', title: 'The Alternative Rock Era',
-        text: "In the shallows the light still reaches everything. Radiohead arrive as a post-grunge British guitar band: three guitars, bass and drums, the distorted angst of 'Creep', then the expansive anthems of The Bends. Familiar shapes, bright colours, but the existential undertow is already there.",
-        albums: [
-            { id: 1, title: 'Pablo Honey', year: '1993', image: '/pablo honey.png', depth: 40, track: 'Creep' },
-            { id: 2, title: 'The Bends', year: '1995', image: '/the bends.png', depth: 150, track: 'Fake Plastic Trees' },
-        ],
-    },
-    {
-        id: 'twilight', name: 'Twilight Zone', range: [200, 1000], colors: ['#1d6680', '#0c3550'], glow: '95,179,214',
-        era: 'Era 02 · 1997', title: 'The Turn',
-        text: "The light starts to fail. OK Computer keeps the guitars but bends them into progressive, orchestrated structures, and the songs turn toward alienation, technology and modern life. It is the last record you can still see the surface from.",
-        albums: [
-            { id: 3, title: 'OK Computer', year: '1997', image: '/ok computer.png', depth: 650, track: 'Paranoid Android' },
-        ],
-    },
-    {
-        id: 'midnight', name: 'Midnight Zone', range: [1000, 4000], colors: ['#0c3550', '#04121f'], glow: '76,201,240',
-        era: 'Era 03 · 2000 – 2003', title: 'The Electronic Evolution',
-        text: "No sunlight reaches this far. Kid A and Amnesiac abandon conventional rock for electronic landscapes drawn from IDM, jazz and 20th-century classical music: synthesizers, drum machines, Ondes Martenot and heavy digital manipulation. Hail to the Thief drags the guitars back down into the dark with them.",
-        albums: [
-            { id: 4, title: 'Kid A', year: '2000', image: '/kid a.png', depth: 1400, track: 'Everything In Its Right Place' },
-            { id: 5, title: 'Amnesiac', year: '2001', image: '/amnesiac.png', depth: 2300, track: 'Pyramid Song' },
-            { id: 6, title: 'Hail to the Thief', year: '2003', image: '/hail to the theif.png', depth: 3400, track: 'There There' },
-        ],
-    },
-    {
-        id: 'abyssal', name: 'Abyssal Zone', range: [4000, 6000], colors: ['#04121f', '#02070d'], glow: '123,92,255',
-        era: 'Era 04 · 2007 – 2011', title: 'The Art Rock Synthesis',
-        text: "Down here things make their own light. In Rainbows finds a warm synthesis of acoustic roots and electronic experiment, with complex polyrhythms and an organic use of effects. The King of Limbs goes further into loops and rhythm. In the deepest ocean, the bottom of the sea.",
-        albums: [
-            { id: 7, title: 'In Rainbows', year: '2007', image: '/in rainbows.png', depth: 4500, track: 'Weird Fishes/Arpeggi', soundtrack: 'weird-fishes' },
-            { id: 8, title: 'The King of Limbs', year: '2011', image: '/the king of limbs.png', depth: 5600, track: 'Lotus Flower' },
-        ],
-    },
-    {
-        id: 'hadal', name: 'Hadal Zone', range: [6000, MAX_DEPTH], colors: ['#02070d', '#000000'], glow: '159,230,255',
-        era: 'Era 05 · 2016', title: 'The Deepest Point',
-        text: "The trenches. A Moon Shaped Pool is the quietest and heaviest record of all: choral and string arrangements by Jonny Greenwood with the London Contemporary Orchestra, and songs that had waited decades to be recorded, like 'True Love Waits'.",
-        albums: [
-            { id: 9, title: 'A Moon Shaped Pool', year: '2016', image: '/moon Shaped Pool.png', depth: 8200, track: 'Daydreaming' },
-        ],
-    },
-];
 
 // Who Thom meets on the way down, keyed by zone
 const MEMBERS = {
@@ -79,10 +32,15 @@ const MEMBERS = {
         bio: "The band's drummer and steadiest pulse. Also a solo artist, with records including Familial and Strange Dance. He brought the regulator: you'll want to breathe from here on.",
         gives: 'regulator',
     },
+    hadal: {
+        name: 'Thom Yorke, 1993', image: '/divers/young-thom.webp', role: 'Vocals · guitar · piano', born: 'b. 1968',
+        bio: "Bleached hair, Pablo Honey years, still singing 'Creep' every night. At the bottom of the trench you meet the version of yourself who started the dive. Nothing reaches this deep, so he brought you a light.",
+        gives: 'light',
+    },
 };
 
 // Thom's outfit level after receiving each item (0 is no gear); matches ThomDiver's images
-const GEAR_LEVEL = { scuba: 1, goggles: 2, cap: 3, regulator: 4 };
+const GEAR_LEVEL = { scuba: 1, goggles: 2, cap: 3, regulator: 4, light: 5 };
 
 // Where Thom's feet go on the diving board, in /surface.webp pixels
 const SURFACE_IMAGE = { width: 1746, height: 890, posX: 0.3, posY: 1 };
@@ -90,7 +48,6 @@ const BOARD_FEET = { x: 640, y: 646 };
 const SEA_LEVEL_Y = 598;
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const fmt = (m) => m.toLocaleString('en-GB');
 
 // Maps a point in an object-cover image to section-local pixels
 function coverPoint(image, sectionW, sectionH, x, y) {
@@ -123,6 +80,19 @@ function RegulatorGear() {
             <circle cx="48" cy="24" r="9" fill="#2a3033" />
             <path d="M42 22 q 6 -4 12 0 M42 26 q 6 -4 12 0" stroke="#f2c200" strokeWidth="2" fill="none" />
             <rect x="62" y="20" width="8" height="8" rx="2" fill="#2a3033" />
+        </svg>
+    );
+}
+
+function LightGear() {
+    return (
+        <svg viewBox="0 0 72 40" className="w-full h-full drop-shadow-[0_0_16px_rgba(255,236,190,0.7)]">
+            <path d="M2 22 H 70" stroke="#1b1f22" strokeWidth="6" />
+            <path d="M6 22 H 66" stroke="#3d4549" strokeWidth="1" strokeDasharray="3 3" />
+            <rect x="20" y="8" width="32" height="26" rx="7" fill="#1b1f22" stroke="#5c6266" strokeWidth="1.5" />
+            <circle cx="33" cy="21" r="9" fill="#fff4d6" />
+            <circle cx="33" cy="21" r="5" fill="#ffffff" />
+            <circle cx="46" cy="21" r="2.2" fill="#ff3b30" />
         </svg>
     );
 }
@@ -217,35 +187,32 @@ function Encounter({ member, zone, gearRef }) {
                         <RegulatorGear />
                     </div>
                 )}
+                {member.gives === 'light' && (
+                    <div ref={gearRef} className="absolute -left-12 md:-left-16 bottom-[30%] w-16 md:w-20 h-10 md:h-12">
+                        <LightGear />
+                    </div>
+                )}
             </div>
         </div>
     );
 }
 
-function AlbumSpecimen({ album, zone, index }) {
+function AlbumSpecimen({ album, zone, index, stateRef, startOpen }) {
     const flip = index % 2 === 1;
     const glow = zone.glow;
+    const textRef = useRef(null);
+    // The words surface once the record is out
+    const showText = (tl, at) => tl.fromTo(textRef.current, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, ease: 'power3.out' }, at);
     return (
-        <div data-soundtrack={album.soundtrack} className={`reveal relative flex flex-col md:flex-row items-center gap-8 md:gap-16 py-16 md:py-24 ${flip ? 'md:flex-row-reverse' : ''}`}>
+        <div data-soundtrack={album.soundtrack} className={`reveal relative flex flex-col md:flex-row items-center gap-6 md:gap-16 py-12 md:py-16 ${flip ? 'md:flex-row-reverse' : ''}`}>
             <div className="absolute left-0 right-0 top-0 flex items-center gap-4 font-mono text-[10px] md:text-xs tracking-[0.3em] uppercase text-white/50">
                 <span className="w-8 border-t border-white/40" />
                 <span>{fmt(album.depth)} m</span>
             </div>
 
-            <Link to={`/album/${album.id}`} className="group relative block w-56 md:w-80 shrink-0">
-                <div
-                    className={`aspect-square bg-cover bg-center rounded-sm ${glow ? 'deep-cover' : ''}`}
-                    style={{
-                        backgroundImage: `url('${album.image}')`,
-                        boxShadow: glow ? `0 0 60px rgba(${glow},0.35), 0 0 0 1px rgba(${glow},0.4)` : '0 20px 50px rgba(0,30,40,0.35)',
-                    }}
-                />
-                <span className="absolute -bottom-3 right-3 font-mono text-[10px] tracking-[0.3em] uppercase bg-black/60 backdrop-blur px-2 py-1 text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Open file →
-                </span>
-            </Link>
+            <FoundObject album={album} zone={zone} stateRef={stateRef} startOpen={startOpen} onOpen={showText} />
 
-            <div className={`max-w-sm text-center ${flip ? 'md:text-right' : 'md:text-left'}`}>
+            <div ref={textRef} className={`max-w-sm text-center ${flip ? 'md:text-right' : 'md:text-left'} ${startOpen ? '' : 'invisible opacity-0'}`}>
                 <p className="font-mono text-xs tracking-[0.3em] text-white/50">{album.year}</p>
                 <h3 className="title-serif text-4xl md:text-6xl text-white mt-2 leading-none">{album.title}</h3>
                 <div className={`inline-block mt-6 border px-4 py-3 text-left rounded-sm backdrop-blur-sm ${glow ? 'border-white/15 bg-white/5' : 'border-white/30 bg-white/10'}`}>
@@ -275,6 +242,34 @@ export default function OceanDescent() {
     const fishSpotRefs = useRef({});
     const verdictRef = useRef(null);
     const diveState = useRef({ depth: 0, gear: 0, board: null, eaten: false, mouth: null, lure: null, thom: { x: -999, y: -999 }, bubbles: [] });
+    // Coming back from an album page: drop the diver back where they left
+    const [returning] = useState(readDive);
+
+    useEffect(() => {
+        if (!returning) return undefined;
+        forgetDive();
+        const previous = history.scrollRestoration;
+        history.scrollRestoration = 'manual';
+        // Layout position, so a cover still mid reveal-animation doesn't throw it off
+        const pageTop = (el) => {
+            let y = 0;
+            for (let n = el; n; n = n.offsetParent) y += n.offsetTop;
+            return y;
+        };
+        const align = () => {
+            const card = document.querySelector(`[data-album="${returning.albumId}"]`);
+            if (card) window.scrollTo(0, pageTop(card) - returning.top);
+            ScrollTrigger.refresh();
+        };
+        // Once now, and again after late images have settled the layout
+        const raf = requestAnimationFrame(align);
+        const later = setTimeout(align, 600);
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(later);
+            history.scrollRestoration = previous;
+        };
+    }, [returning]);
 
     useGSAP(() => {
         // The Karma Fish patrols its beat: swim right, turn round, swim left, turn back
@@ -308,7 +303,7 @@ export default function OceanDescent() {
             gsap.to(verdictRef.current, { opacity: 1, y: 0, duration: 1, delay: 0.4, ease: 'power3.out', overwrite: true });
         };
 
-        // Jonny hands over the scuba gear, Colin the goggles: each item flies to
+        // Jonny hands over the scuba gear, Colin the goggles, young Thom the light: each item flies to
         // wherever Thom is and his picture changes when it lands
         for (const [zoneId, member] of Object.entries(MEMBERS)) {
             if (!member.gives) continue;
@@ -403,6 +398,8 @@ export default function OceanDescent() {
         };
 
         const frame = (now) => {
+            // Refs detach before the cleanup cancels this loop on the way to an album page
+            if (!karmaRef.current) return;
             const { depth: d, zone } = measureDepth();
             depth = d;
             diveState.current.depth = depth;
@@ -465,10 +462,14 @@ export default function OceanDescent() {
             }
             ctx.globalAlpha = 1;
 
-            // Past the twilight Thom's lamp is the only light
+            // Past the twilight Thom's lamp is the only light; young Thom's headlamp
+            // throws it further and warmer in the trench
             const torch = diveState.current.eaten ? 0 : clamp((depth - 600) / 1200, 0, 1);
+            const lamp = diveState.current.gear >= GEAR_LEVEL.light;
             torchRef.current.style.opacity = torch;
-            torchRef.current.style.background = `radial-gradient(280px circle at ${thom.x}px ${thom.y}px, rgba(120,180,220,0.16), transparent 70%)`;
+            torchRef.current.style.background = lamp
+                ? `radial-gradient(420px circle at ${thom.x}px ${thom.y}px, rgba(255,236,190,0.22), transparent 70%)`
+                : `radial-gradient(280px circle at ${thom.x}px ${thom.y}px, rgba(120,180,220,0.16), transparent 70%)`;
 
             raf = requestAnimationFrame(frame);
         };
@@ -576,7 +577,14 @@ export default function OceanDescent() {
 
                         <div className="mt-8 md:mt-16">
                             {zone.albums.map((album, ai) => (
-                                <AlbumSpecimen key={album.id} album={album} zone={zone} index={ai + zi} />
+                                <AlbumSpecimen
+                                    key={album.id}
+                                    album={album}
+                                    zone={zone}
+                                    index={ai + zi}
+                                    stateRef={diveState}
+                                    startOpen={Boolean(returning) && album.id <= returning.albumId}
+                                />
                             ))}
                         </div>
                     </div>
