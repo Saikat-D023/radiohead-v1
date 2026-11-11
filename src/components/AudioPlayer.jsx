@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { Volume2, VolumeX } from 'lucide-react';
+import Lyrics from './Lyrics';
 
 const VOLUME = 0.5;
 
@@ -114,13 +115,22 @@ export default function AudioPlayer() {
         }
     };
 
+    // Only the main track has lyrics, and only while it's actually audible
+    const lyricsAudio = useCallback(
+        () => (playingRef.current && currentRef.current === 'main' ? tracksRef.current.main : null),
+        [],
+    );
+
     return (
-        <button
-            onClick={togglePlay}
-            className="fixed bottom-6 right-6 z-[100] bg-black/50 p-3 rounded-full backdrop-blur-md border border-white/10 text-white/50 hover:text-white hover:border-white/30 transition-all"
-            aria-label={isPlaying ? "Mute music" : "Play music"}
-        >
-            {isPlaying ? <Volume2 size={24} /> : <VolumeX size={24} />}
-        </button>
+        <>
+            <Lyrics src="/audio2.lrc" title="Radiohead · Weird Fishes/Arpeggi" getAudio={lyricsAudio} />
+            <button
+                onClick={togglePlay}
+                className="fixed bottom-6 right-6 z-[100] bg-black/50 p-3 rounded-full backdrop-blur-md border border-white/10 text-white/50 hover:text-white hover:border-white/30 transition-all"
+                aria-label={isPlaying ? "Mute music" : "Play music"}
+            >
+                {isPlaying ? <Volume2 size={24} /> : <VolumeX size={24} />}
+            </button>
+        </>
     );
 }

@@ -48,6 +48,43 @@ const BOARD_FEET = { x: 640, y: 646 };
 const SEA_LEVEL_Y = 598;
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const round = (n) => Math.round(n * 10) / 10;
+
+// Centre of an element in the dive's own coordinates, from layout offsets so the
+// bobbing and reveal transforms don't make the route wobble
+function localCentre(el, root) {
+    let x = el.offsetWidth / 2;
+    let y = el.offsetHeight / 2;
+    for (let n = el; n && n !== root; n = n.offsetParent) {
+        x += n.offsetLeft;
+        y += n.offsetTop;
+    }
+    return { x, y };
+}
+
+// Between stops the route swings across the page, and through the longest gaps
+// it throws in a loop, Framer-scroll style
+function weave(stops, width) {
+    const points = [];
+    const stopAt = [];
+    stops.forEach((p, i) => {
+        if (i) {
+            const a = stops[i - 1];
+            const gap = p.y - a.y;
+            const cx = clamp(width - (a.x + p.x) / 2, width * 0.15, width * 0.85);
+            const cy = (a.y + p.y) / 2;
+            if (gap > 1200 && i % 2 === 0) {
+                const r = clamp(width * 0.1, 60, 150);
+                points.push({ x: cx + r, y: cy }, { x: cx, y: cy - r }, { x: cx - r, y: cy }, { x: cx + r * 0.2, y: cy + r });
+            } else if (gap > 400) {
+                points.push({ x: cx, y: cy });
+            }
+        }
+        stopAt.push(points.length);
+        points.push(p);
+    });
+    return { points, stopAt };
+}
 
 // Maps a point in an object-cover image to section-local pixels
 function coverPoint(image, sectionW, sectionH, x, y) {
@@ -241,7 +278,14 @@ export default function OceanDescent() {
     const fishFlipRef = useRef(null);
     const fishSpotRefs = useRef({});
     const verdictRef = useRef(null);
-    const diveState = useRef({ depth: 0, gear: 0, board: null, eaten: false, mouth: null, lure: null, thom: { x: -999, y: -999 }, bubbles: [] });
+    const karmaSceneRef = useRef(null);
+    // Version 2: const highwayRef = useRef(null);
+    const routeSvgRef = useRef(null);
+    const routeRef = useRef(null);
+    const trailRef = useRef(null);
+    const trailGlowRef = useRef(null);
+    const measureRef = useRef(null);
+    const diveState = useRef({ depth: 0, gear: 0, board: null, route: null, eaten: false, pooped: false, mouth: null, lure: null, vent: null, thom: { x: -999, y: -999 }, bubbles: [] });
     // Coming back from an album page: drop the diver back where they left
     const [returning] = useState(readDive);
 
@@ -295,8 +339,29 @@ export default function OceanDescent() {
                 gsap.to(verdictRef.current, { opacity: 0, y: 20, duration: 0.4, overwrite: true });
             },
         });
+        /* Version 2: at the bottom of the Karma Fish Zone it poops him out the back, gear
+           and all gone, and he escapes up to the highway
+        ScrollTrigger.create({
+            trigger: karmaRef.current,
+            start: 'bottom bottom',
+            onEnter: () => {
+                s.savedGear = s.gear;
+                s.gear = 0;
+                s.pooped = true;
+                patrol.pause();
+                gsap.delayedCall(1.6, () => patrol.resume());
+                gsap.fromTo(karmaSceneRef.current, { y: -8 }, { y: 0, duration: 0.6, ease: 'elastic.out(1.2, 0.2)' });
+                gsap.to(verdictRef.current, { opacity: 0, y: -20, duration: 0.6, overwrite: true });
+            },
+            onLeaveBack: () => {
+                s.gear = s.savedGear ?? s.gear;
+                s.pooped = false;
+                if (s.eaten) gsap.to(verdictRef.current, { opacity: 1, y: 0, duration: 0.6, overwrite: true });
+            },
+        });
+        */
         s.onSwallow = () => {
-            gsap.fromTo(karmaRef.current, { x: -10 }, { x: 0, duration: 0.5, ease: 'elastic.out(1.2, 0.2)' });
+            gsap.fromTo(karmaSceneRef.current, { x: -10 }, { x: 0, duration: 0.5, ease: 'elastic.out(1.2, 0.2)' });
             gsap.fromTo(fishSpotRefs.current.flash, { opacity: 0.9, scale: 0.4 }, { opacity: 0, scale: 2.2, duration: 0.9, ease: 'power2.out' });
             // Back on patrol once he's dealt with
             gsap.delayedCall(1.5, () => { if (s.eaten) patrol.resume(); });
@@ -386,6 +451,8 @@ export default function OceanDescent() {
         // Depth at the middle of the viewport, interpolated within whichever zone it falls in
         const measureDepth = () => {
             const center = window.innerHeight / 2;
+            // Version 2: back on dry land
+            // if (center >= highwayRef.current.getBoundingClientRect().top) return { depth: 0, zone: 'Hartford, CT', land: true };
             if (center >= karmaRef.current.getBoundingClientRect().top) return { depth: MAX_DEPTH, zone: 'Karma Fish Zone' };
             for (let i = ZONES.length - 1; i >= 0; i--) {
                 const rect = zoneRefs.current[i].getBoundingClientRect();
@@ -400,7 +467,7 @@ export default function OceanDescent() {
         const frame = (now) => {
             // Refs detach before the cleanup cancels this loop on the way to an album page
             if (!karmaRef.current) return;
-            const { depth: d, zone } = measureDepth();
+            const { depth: d, zone, land } = measureDepth();
             depth = d;
             diveState.current.depth = depth;
             const surfaceRect = surfaceRef.current.getBoundingClientRect();
@@ -412,6 +479,8 @@ export default function OceanDescent() {
             };
             diveState.current.mouth = centre(fishSpotRefs.current.mouth);
             diveState.current.lure = centre(fishSpotRefs.current.lure);
+            // Version 2: where the fish poops him out
+            // diveState.current.vent = centre(fishSpotRefs.current.vent);
             const scroll = window.scrollY;
             const dy = scroll - lastScroll;
             lastScroll = scroll;
@@ -421,7 +490,7 @@ export default function OceanDescent() {
                 depthRef.current.textContent = fmt(depth);
                 zoneNameRef.current.textContent = zone;
                 markerRef.current.style.transform = `translateY(${Math.sqrt(depth / MAX_DEPTH) * 100}%)`;
-                hudRef.current.style.opacity = surfaceRect.bottom < h * 0.6 ? 1 : 0;
+                hudRef.current.style.opacity = surfaceRect.bottom < h * 0.6 && !land ? 1 : 0;
             }
 
             // Marine snow thickens with depth and drifts against the scroll
@@ -477,18 +546,101 @@ export default function OceanDescent() {
         resize();
         raf = requestAnimationFrame(frame);
         window.addEventListener('resize', resize);
-        // Hide the system cursor across the whole page (navbar and footer too) while Thom is it
-        document.documentElement.classList.add('thom-cursor');
         return () => {
-            document.documentElement.classList.remove('thom-cursor');
             cancelAnimationFrame(raf);
             window.removeEventListener('resize', resize);
+        };
+    }, []);
+
+    // Thom's route: off the diving board, past each band member's gift and through every
+    // record, down to the Karma Fish. Rebuilt whenever the page changes size
+    useEffect(() => {
+        const root = rootRef.current;
+        const dive = diveState.current;
+        let raf = 0;
+
+        const build = () => {
+            const width = root.clientWidth;
+            const height = root.offsetHeight;
+            const surface = surfaceRef.current;
+            const feet = coverPoint(SURFACE_IMAGE, surface.clientWidth, surface.clientHeight, BOARD_FEET.x, BOARD_FEET.y);
+            const stops = [{ x: surface.offsetLeft + feet.x, y: surface.offsetTop + feet.y - 60 }];
+            for (const zone of ZONES) {
+                const gear = gearRefs.current[zone.id];
+                if (gear) stops.push(localCentre(gear, root));
+                for (const album of zone.albums) {
+                    const cover = root.querySelector(`[data-album="${album.id}"]`);
+                    if (cover) stops.push(localCentre(cover, root));
+                }
+            }
+            // Into the fish
+            const karma = karmaRef.current;
+            stops.push({ x: width / 2, y: karma.offsetTop + window.innerHeight * 0.4 });
+            // Version 2: then out onto the highway
+            // const highway = highwayRef.current;
+            // stops.push({ x: width * 0.42, y: highway.offsetTop + highway.offsetHeight * 0.45 });
+            // Always heading down, so scroll position maps onto the route one way only
+            const ordered = stops.filter((p, i) => i === 0 || p.y > stops[i - 1].y + 40);
+
+            // Smooth curve through every point (Catmull-Rom as cubic Béziers), measuring as we go
+            const { points, stopAt } = weave(ordered, width);
+            const measure = measureRef.current;
+            const lens = [0];
+            let d = `M${round(points[0].x)} ${round(points[0].y)}`;
+            for (let i = 0; i < points.length - 1; i++) {
+                const p0 = points[i - 1] || points[i];
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                const p3 = points[i + 2] || p2;
+                const seg = `C${round(p1.x + (p2.x - p0.x) / 6)} ${round(p1.y + (p2.y - p0.y) / 6)} ${round(p2.x - (p3.x - p1.x) / 6)} ${round(p2.y - (p3.y - p1.y) / 6)} ${round(p2.x)} ${round(p2.y)}`;
+                d += seg;
+                measure.setAttribute('d', `M${round(p1.x)} ${round(p1.y)}${seg}`);
+                lens.push(lens[i] + measure.getTotalLength());
+            }
+            const total = lens[lens.length - 1];
+
+            const svg = routeSvgRef.current;
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            const lines = [trailRef.current, trailGlowRef.current];
+            for (const path of [routeRef.current, ...lines]) path.setAttribute('d', d);
+            for (const line of lines) line.style.strokeDasharray = `${total} ${total}`;
+            dive.route = {
+                root,
+                trail: trailRef.current,
+                lines,
+                total,
+                stops: stopAt.map((k) => ({ y: points[k].y, len: lens[k] })),
+            };
+        };
+
+        const schedule = () => {
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(build);
+        };
+        build();
+        // Late images change the page height, and with it where everything sits
+        const observer = new ResizeObserver(schedule);
+        observer.observe(root);
+        return () => {
+            cancelAnimationFrame(raf);
+            observer.disconnect();
+            dive.route = null;
         };
     }, []);
 
     return (
         <div ref={rootRef} className="relative w-full text-white">
             <ThomDiver stateRef={diveState} />
+            {/* Thom's route: faint dots ahead of him, a bright trail where he's been. Above the
+                water colours, below the words */}
+            <svg ref={routeSvgRef} className="absolute top-0 left-0 z-[1] pointer-events-none overflow-visible" fill="none" aria-hidden="true">
+                <path ref={measureRef} visibility="hidden" />
+                <path ref={routeRef} className="dive-route" strokeWidth="2" strokeLinecap="round" />
+                <path ref={trailGlowRef} className="dive-trail-glow" strokeWidth="14" strokeLinecap="round" strokeDashoffset="100000" />
+                <path ref={trailRef} className="dive-trail" strokeWidth="3" strokeLinecap="round" strokeDashoffset="100000" />
+            </svg>
             <canvas ref={canvasRef} className="fixed inset-0 w-full h-full z-[5] pointer-events-none" />
             <div ref={torchRef} className="fixed inset-0 z-[6] pointer-events-none opacity-0" />
 
@@ -602,39 +754,79 @@ export default function OceanDescent() {
                 </p>
             </div>
 
-            {/* Karma Fish Zone: the end of the dive, and of Thom */}
-            <section id="karma" ref={karmaRef} className="relative h-screen overflow-hidden bg-black">
-                {/* The fish: placement → patrol (x) → swim bob → flip (facing) */}
-                <div className="absolute left-1/2 top-[50%] -translate-x-1/2 -translate-y-1/2 w-[clamp(280px,44vw,600px)] pointer-events-none">
-                    <div ref={fishRef}>
-                        <div className="fish-swim">
-                            <div ref={fishFlipRef}>
-                                <KarmaFish
-                                    mouthRef={(el) => (fishSpotRefs.current.mouth = el)}
-                                    lureRef={(el) => (fishSpotRefs.current.lure = el)}
-                                    flashRef={(el) => (fishSpotRefs.current.flash = el)}
-                                />
+            {/* Karma Fish Zone: the end of the dive, and nearly of Thom. The scene stays pinned
+                while the fish swallows him and, a screen later, passes him */}
+            {/* Version 2: make this h-[220vh] again so the scene stays pinned for the poop */}
+            <section id="karma" ref={karmaRef} className="relative h-screen bg-black">
+                <div ref={karmaSceneRef} className="sticky top-0 h-screen overflow-hidden">
+                    {/* The fish: placement → patrol (x) → swim bob → flip (facing) */}
+                    <div className="absolute left-1/2 top-[50%] -translate-x-1/2 -translate-y-1/2 w-[clamp(280px,44vw,600px)] pointer-events-none">
+                        <div ref={fishRef}>
+                            <div className="fish-swim">
+                                <div ref={fishFlipRef}>
+                                    <KarmaFish
+                                        mouthRef={(el) => (fishSpotRefs.current.mouth = el)}
+                                        lureRef={(el) => (fishSpotRefs.current.lure = el)}
+                                        flashRef={(el) => (fishSpotRefs.current.flash = el)}
+                                        ventRef={(el) => (fishSpotRefs.current.vent = el)}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* A quiet sea floor and a small sign */}
-                <svg className="absolute inset-x-0 bottom-0 w-full h-[16vh]" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
-                    <path d="M0 40 C 120 20, 220 46, 340 34 C 470 22, 560 48, 690 36 C 800 26, 900 44, 1000 30 V 100 H 0 Z" fill="#060a10" />
-                </svg>
-                <div className="absolute bottom-[11vh] right-[12%] flex flex-col items-center pointer-events-none">
-                    <span className="border border-white/20 px-3 py-1.5 font-mono text-[10px] tracking-[0.3em] uppercase text-white/50">Karma Fish Zone</span>
-                    <span className="w-px h-8 bg-white/20" />
-                </div>
+                    {/* A quiet sea floor and a small sign */}
+                    <svg className="absolute inset-x-0 bottom-0 w-full h-[16vh]" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+                        <path d="M0 40 C 120 20, 220 46, 340 34 C 470 22, 560 48, 690 36 C 800 26, 900 44, 1000 30 V 100 H 0 Z" fill="#060a10" />
+                    </svg>
+                    <div className="absolute bottom-[11vh] right-[12%] flex flex-col items-center pointer-events-none">
+                        <span className="border border-white/20 px-3 py-1.5 font-mono text-[10px] tracking-[0.3em] uppercase text-white/50">Karma Fish Zone</span>
+                        <span className="w-px h-8 bg-white/20" />
+                    </div>
 
-                <p
-                    ref={verdictRef}
-                    className="absolute inset-x-0 top-[18%] px-6 text-center title-serif italic text-4xl md:text-6xl text-white opacity-0 translate-y-5"
-                >
-                    This is what you get.
-                </p>
+                    <p
+                        ref={verdictRef}
+                        className="absolute inset-x-0 top-[18%] px-6 text-center title-serif italic text-4xl md:text-6xl text-white opacity-0 translate-y-5"
+                    >
+                        This is what you get.
+                    </p>
+                </div>
             </section>
+
+            {/* Version 2: the Connecticut highway the Karma Fish poops Thom out onto
+            // Out of the fish and up onto dry land: the Hartford interchange, the highway
+                behind OK Computer. Version 2 picks up from here
+            <section id="highway" ref={highwayRef} className="relative h-screen min-h-[640px] overflow-hidden bg-[#8fa9bf]">
+                <img
+                    src="/interchange.webp"
+                    alt="Highway interchange beside the Connecticut River in Hartford"
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    draggable="false"
+                />
+                // Surfacing from black into daylight
+                <div className="absolute inset-x-0 top-0 h-[35%] bg-gradient-to-b from-black via-black/60 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/75 to-transparent pointer-events-none" />
+
+                <div className="reveal absolute inset-x-0 top-[9%] px-6 text-center z-10">
+                    <p className="font-mono text-[10px] md:text-xs tracking-[0.4em] uppercase text-white/75">Hartford, Connecticut · 0 m</p>
+                    <h2 className="title-serif italic text-4xl md:text-7xl text-white mt-3 leading-tight [text-shadow:0_4px_24px_rgba(0,0,0,0.55)]">
+                        I hit the bottom and escape.
+                    </h2>
+                </div>
+
+                <div className="reveal absolute inset-x-0 bottom-[8%] px-6 z-10 flex flex-col md:flex-row items-center md:items-end justify-between gap-6 max-w-6xl mx-auto">
+                    <p className="max-w-md text-center md:text-left font-sans text-sm md:text-base leading-relaxed text-white/85 [text-shadow:0_2px_10px_rgba(0,0,0,0.6)]">
+                        Out of the fish, bare as when he jumped, Thom washes up beside the interchange whose blurred
+                        photograph ended up on the cover of OK Computer. Cars, motorways, modern life: the next dive starts on the road.
+                    </p>
+                    <div className="road-sign shrink-0 px-5 py-3 text-center">
+                        <p className="font-sans font-bold text-[10px] tracking-[0.25em] uppercase opacity-80">Exit 2</p>
+                        <p className="font-sans font-bold text-xl md:text-2xl leading-tight">Version 2</p>
+                        <p className="font-sans text-xs md:text-sm opacity-90">Coming soon ↑</p>
+                    </div>
+                </div>
+            </section>
+            */}
         </div>
     );
 }

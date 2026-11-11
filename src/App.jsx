@@ -24,13 +24,13 @@ function App() {
 
   return (
     <>
-      {/* On the ocean page Thom is the cursor */}
-      {pathname !== '/' && <CustomCursor />}
+      {/* On the ocean page the fish ducks away while Thom swims his route */}
+      <CustomCursor hideOnScroll={pathname === '/'} />
       <AudioPlayer />
       {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
 
       <main
-        className="relative w-full overflow-x-hidden flex flex-col transition-opacity duration-1000 bg-[var(--color-void)] text-[var(--color-ghost)]"
+        className="relative w-full overflow-x-clip flex flex-col transition-opacity duration-1000 bg-[var(--color-void)] text-[var(--color-ghost)]"
         style={{ opacity: loading ? 0 : 1 }}
       >
         <Routes>

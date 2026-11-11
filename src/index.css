@@ -119,12 +119,78 @@ body::after {
   }
 }
 
-/* Thom replaces the cursor on the ocean page */
+/* The pixel fish replaces the cursor everywhere */
 @media (pointer: fine) {
-  .thom-cursor,
-  .thom-cursor * {
+  .fish-cursor,
+  .fish-cursor * {
     cursor: none !important;
   }
+}
+
+/* The cursor fish swims on the spot, pivoting on its mouth so the hotspot stays put */
+@keyframes fish-wiggle {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.fish-wiggle {
+  transform-origin: 6% 13%;
+  animation: fish-wiggle 1.4s ease-in-out infinite;
+}
+
+/* Lyrics: each word surfaces out of the murk, the old line sinks away */
+@keyframes lyric-word {
+  from { opacity: 0; transform: translateY(10px); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+.lyric-word {
+  opacity: 0;
+  animation: lyric-word 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes lyric-out {
+  to { opacity: 0; transform: translateY(-12px); filter: blur(6px); }
+}
+
+.lyric-out {
+  animation: lyric-out 0.5s ease-in forwards;
+}
+
+/* What the Karma Fish leaves behind: a soft casing that sags and swells as Thom
+   pushes about inside it */
+@keyframes feces-squirm {
+  0%, 100% { transform: scale(1, 1) skewY(0deg); }
+  30% { transform: scale(1.04, 0.93) skewY(2deg); }
+  65% { transform: scale(0.97, 1.06) skewY(-1.5deg); }
+}
+
+.feces-squirm {
+  transform-origin: 10% 55%;
+  animation: feces-squirm 0.9s ease-in-out infinite;
+}
+
+/* Interstate guide sign, Connecticut green */
+.road-sign {
+  background: #0d6b3a;
+  border: 3px solid #f4f4ef;
+  box-shadow: 0 0 0 3px #0d6b3a, 0 18px 40px rgba(0, 0, 0, 0.45);
+  border-radius: 10px;
+  color: #f4f4ef;
+}
+
+/* Thom's trail through the dive */
+.dive-route {
+  stroke: rgba(225, 248, 255, 0.16);
+  stroke-dasharray: 2 12;
+}
+
+.dive-trail {
+  stroke: rgba(235, 250, 255, 0.92);
+}
+
+.dive-trail-glow {
+  stroke: rgba(150, 225, 255, 0.18);
 }
 
 /* Watery tooltip: a wobbling glass bubble with drifting caustics */

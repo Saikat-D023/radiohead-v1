@@ -6,11 +6,12 @@ const MOUTH = { left: '76.7%', top: '57.3%' };
 const RED_LURE = { left: '88.3%', top: '38.7%' };
 const BLUE_LURE = { left: '93.7%', top: '22.7%' };
 const EYE = { left: '72.8%', top: '41.3%' };
+const VENT = { left: '36%', top: '64%' };
 
 // The Karma Fish, painted, facing right. The tail is its own layer and swishes
 // from its base; the lures pulse red and blue like police lights.
-// mouthRef / lureRef mark where Thom gets lured to and swallowed.
-export default function KarmaFish({ mouthRef, lureRef, flashRef }) {
+// mouthRef / lureRef mark where Thom gets lured to and swallowed, ventRef where he comes back out.
+export default function KarmaFish({ mouthRef, lureRef, flashRef, ventRef }) {
     return (
         <div className="relative w-full" style={{ aspectRatio: '900 / 375' }} aria-hidden="true">
             <img src="/karma-fish-tail.webp" alt="" draggable="false" className="kf-tail absolute inset-0 w-full h-full" style={{ transformOrigin: JOINT }} />
@@ -27,6 +28,7 @@ export default function KarmaFish({ mouthRef, lureRef, flashRef }) {
             </div>
 
             <div ref={lureRef} className="absolute" style={RED_LURE} />
+            <div ref={ventRef} className="absolute" style={VENT} />
             <div ref={mouthRef} className="absolute" style={MOUTH}>
                 <div ref={flashRef} className="w-40 h-40 -ml-20 -mt-20 rounded-full bg-[radial-gradient(circle,rgba(200,240,255,0.8),transparent_60%)] mix-blend-screen opacity-0" />
             </div>
